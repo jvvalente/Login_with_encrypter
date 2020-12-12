@@ -8,6 +8,7 @@
 #include "passserver.h"
 #include <string>
 #include <utility>
+#include <termios.h>
 
 using namespace std;
 using namespace Joao;
@@ -47,6 +48,38 @@ int main() {
 
     choice = 't';
 
+    //-----------Using termios.h to hide input------------
+
+    //TODO: If there is time put this in a function for cleaner code
+
+    //Got this information from the GNU libray(they provide an alternative
+    //way to do something similar to the outdated getpass()) and termios.h
+    //documentation.
+
+    //This function sets the parameters associated with the terminal
+    //tcsetattr(int, int, struct termios *);
+
+    //Needs a structure as a paremeter
+    //off will be for echo off and on for echo on
+    struct termios t_off, t_on;
+
+    //This function will put the associated parameters for termianl
+    tcgetattr (fileno (stdin), &t_on);
+
+    //sets t_off to be same as t_on, the only thing different is
+    //that echo will be turned off
+    t_off = t_on;
+    t_off.c_lflag &= ~ECHO;
+
+    //To turn off echo we will have to put this before getting password
+    //TCSANOW will make sure changes occur immediately
+    tcsetattr(fileno (stdin), TCSANOW, &t_off);
+
+    //To turn back on we put this after
+    tcsetattr(fileno (stdin), TCSANOW, &t_on);
+
+    //----------------------------------------------------
+
     while(choice != 'x') {
 
         Menu();
@@ -76,7 +109,9 @@ int main() {
 
             cout << "Enter password: ";
 
+            tcsetattr(fileno (stdin), TCSANOW, &t_off);
             cin >> pass;
+            tcsetattr(fileno (stdin), TCSANOW, &t_on);
 
             p1 = make_pair(user, pass);
 
@@ -96,6 +131,7 @@ int main() {
                 cout << "User " << user << " not deleted." << endl;
 
         }
+
         else if (choice == 'c') {
 
             string newPass;
@@ -106,11 +142,17 @@ int main() {
 
             cout << "Enter password: ";
 
+            tcsetattr(fileno (stdin), TCSANOW, &t_off);
             cin >> pass;
+
+            cout << endl;
 
             cout << "Enter new password: ";
 
             cin >> newPass;
+            tcsetattr(fileno (stdin), TCSANOW, &t_on);
+
+            cout << endl;
 
             p1 = make_pair(user, pass);
 
@@ -118,6 +160,7 @@ int main() {
                 cout << "Password changed for user " << user << endl;
 
         }
+
         else if (choice == 'f') {
 
             string compare;
@@ -155,6 +198,7 @@ int main() {
             hf.write_to_file(file);
 
         }
+
         else if (choice == 'x') {
             break;
         }
