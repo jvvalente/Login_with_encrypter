@@ -103,8 +103,6 @@ int main() {
 
             cout << "Enter username: ";
 
-            //getline(cin, user, '\n');
-
             cin >> user;
 
             cout << "Enter password: ";
